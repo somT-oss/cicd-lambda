@@ -1,0 +1,4 @@
+infra/live/ec2/.terragrunt-cache*
+infra/live/ebs/.terragrunt-cache*
+infra/live/rds/.terragrunt-cache*
+infra/live/s3/.terragrunt-cache*
