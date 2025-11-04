@@ -100,7 +100,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub 'ec2-analyzer-${Environment}'
-      CodeUri: ./lambdas/ec2_analyzer/
+      CodeUri: lambdas/ec2_analyzer/
       Handler: lambda_function.lambda_handler
       Description: Analyzes EC2 instances for cost optimization
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -120,7 +120,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub 'rds-analyzer-${Environment}'
-      CodeUri: ./lambdas/rds_analyzer/
+      CodeUri: lambdas/rds_analyzer/
       Handler: lambda_function.lambda_handler
       Description: Analyzes RDS instances for cost optimization
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -140,7 +140,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub 'ebs-analyzer-${Environment}'
-      CodeUri: ./lambdas/ebs_analyzer/
+      CodeUri: lambdas/ebs_analyzer/
       Handler: lambda_function.lambda_handler
       Description: Analyzes EBS volumes for cost optimization
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -160,7 +160,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub 's3-analyzer-${Environment}'
-      CodeUri: ./lambdas/s3_analyzer/
+      CodeUri: lambdas/s3_analyzer/
       Handler: lambda_function.lambda_handler
       Description: Analyzes S3 buckets for cost optimization
       Role: !GetAtt LambdaExecutionRole.Arn
