@@ -52,9 +52,6 @@ phases:
       - echo "Build completed on $(date)"
 
 artifacts:
-  secodary-artifacts:
   files:
     - packaged.yaml
-    - template.yaml
-  name: BuildOutput
 
