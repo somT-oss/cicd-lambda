@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     SAM_CLI_TELEMETRY: 0
-    ARTIFACT_BUCKET: lambda-deployment-build
+    ARTIFACT_BUCKET: codebuild-artifacts-bucuket-1668
 
 phases:
   install:
@@ -37,7 +37,6 @@ phases:
   build:
     commands:
       - echo "Building SAM application..."
-      - cd config
       - sam build --use-container
       - echo "SAM build completed"
       
