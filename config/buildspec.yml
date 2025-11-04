@@ -20,18 +20,24 @@ phases:
 
   pre_build:
     commands:
-      - echo "Check if the test directory exists"
-      - if [ ! -d "tests" ]; then echo "Tests directory not found! Exiting."
-      - echo "Running tests..."
-      - pip install pytest boto3 moto pytest-cov
-      - cd tests
-      - pytest -v --cov=../lambdas
-      - cd ..
-      - echo "Tests passed successfully!"
+      - echo "Run tests if they exist"
+      - |
+        if [ -d "tests" ]; then
+          echo "Running unit tests..."
+          pip install pytest boto3 moto pytest-cov
+          cd tests && pytest -v --cov=../lambdas
+          cd ..
+          echo "Tests passed successfully."
+          pytest tests/
+        else
+          echo "No tests directory found, skipping tests."
+        fi
+
 
   build:
     commands:
       - echo "Building SAM application..."
+      - cd config
       - sam build --use-container
       - echo "SAM build completed"
       

@@ -1,0 +1,205 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Cost Optimizer - Infrastructure analysis and reporting
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Environment name
+  
+  ScheduleExpression:
+    Type: String
+    Default: cron(0 2 * * ? *)
+    Description: Schedule for running analyzers (default 2 AM daily)
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 300
+    MemorySize: 512
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: !Ref CostOptimizerTable
+        ENVIRONMENT: !Ref Environment
+
+Resources:
+  # DynamoDB Table for storing findings
+  CostOptimizerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'CostOptimizerFindings-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: Project
+          Value: CostOptimizer
+        - Key: Environment
+          Value: !Ref Environment
+
+  # IAM Role for Lambda functions
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'CostOptimizerLambdaRole-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CostOptimizerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeVolumes
+                  - ec2:DescribeSnapshots
+                  - ec2:DescribeAddresses
+                  - rds:DescribeDBInstances
+                  - rds:DescribeDBSnapshots
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                  - s3:GetBucketVersioning
+                  - s3:GetLifecycleConfiguration
+                  - s3:GetPublicAccessBlock
+                  - cloudwatch:GetMetricStatistics
+                  - pricing:GetProducts
+                  - pricing:ListPriceLists
+                  - pricing:GetPriceListFileUrl
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !GetAtt CostOptimizerTable.Arn
+
+  # EC2 Analyzer Lambda
+  EC2AnalyzerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'ec2-analyzer-${Environment}'
+      CodeUri: lambdas/ec2_analyzer/
+      Handler: lambda_function.lambda_handler
+      Description: Analyzes EC2 instances for cost optimization
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+            Description: Run EC2 analyzer daily
+            Enabled: true
+      Tags:
+        Name: EC2Analyzer
+        Environment: !Ref Environment
+
+  # RDS Analyzer Lambda
+  RDSAnalyzerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'rds-analyzer-${Environment}'
+      CodeUri: lambdas/rds_analyzer/
+      Handler: lambda_function.lambda_handler
+      Description: Analyzes RDS instances for cost optimization
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+            Description: Run RDS analyzer daily
+            Enabled: true
+      Tags:
+        Name: RDSAnalyzer
+        Environment: !Ref Environment
+
+  # EBS Analyzer Lambda
+  EBSAnalyzerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'ebs-analyzer-${Environment}'
+      CodeUri: lambdas/ebs_analyzer/
+      Handler: lambda_function.lambda_handler
+      Description: Analyzes EBS volumes for cost optimization
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+            Description: Run EBS analyzer daily
+            Enabled: true
+      Tags:
+        Name: EBSAnalyzer
+        Environment: !Ref Environment
+
+  # S3 Analyzer Lambda
+  S3AnalyzerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 's3-analyzer-${Environment}'
+      CodeUri: lambdas/s3_analyzer/
+      Handler: lambda_function.lambda_handler
+      Description: Analyzes S3 buckets for cost optimization
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+            Description: Run S3 analyzer daily
+            Enabled: true
+      Tags:
+        Name: S3Analyzer
+        Environment: !Ref Environment
+
+Outputs:
+  DynamoDBTableName:
+    Description: DynamoDB table for storing findings
+    Value: !Ref CostOptimizerTable
+    Export:
+      Name: !Sub '${AWS::StackName}-TableName'
+
+  LambdaRoleArn:
+    Description: IAM role ARN for Lambda functions
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaRoleArn'
+
+  EC2AnalyzerArn:
+    Description: EC2 Analyzer Lambda ARN
+    Value: !GetAtt EC2AnalyzerFunction.Arn
+
+  RDSAnalyzerArn:
+    Description: RDS Analyzer Lambda ARN
+    Value: !GetAtt RDSAnalyzerFunction.Arn
+
+  EBSAnalyzerArn:
+    Description: EBS Analyzer Lambda ARN
+    Value: !GetAtt EBSAnalyzerFunction.Arn
+
+  S3AnalyzerArn:
+    Description: S3 Analyzer Lambda ARN
+    Value: !GetAtt S3AnalyzerFunction.Arn
