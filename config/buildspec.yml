@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     SAM_CLI_TELEMETRY: 0
-    ARTIFACT_BUCKET: codebuild-artifacts-bucuket-1668
+    ARTIFACT_BUCKET: codebuild-artifacts-bucket-1668
 
 phases:
   install:
@@ -52,6 +52,7 @@ phases:
       - echo "Build completed on $(date)"
 
 artifacts:
+  secodary-artifacts:
   files:
     - packaged.yaml
     - template.yaml
