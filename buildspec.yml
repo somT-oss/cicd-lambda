@@ -63,7 +63,7 @@ phases:
       - sam validate
       
       - echo "Packaging SAM application..."
-      - sam package --s3-bucket $ARTIFACT_BUCKET --s3-prefix sam-artifacts --template-file .aws-sam/build/template.yaml --output-template-file packaged.yaml
+      - sam package --s3-bucket $ARTIFACT_BUCKET --output-template-file packaged.yaml
       - echo "SAM package completed"
 
   post_build:
