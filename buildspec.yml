@@ -39,6 +39,8 @@ phases:
       - echo "Building SAM application..."
       - sam build --use-container
       - echo "SAM build completed"
+      - echo "Build folder structure:"
+      - ls -R .aws-sam/build/
       
       - echo "Validating SAM template..."
       - sam validate
