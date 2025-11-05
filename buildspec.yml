@@ -20,18 +20,6 @@ phases:
 
   pre_build:
     commands:
-      - echo "=== Checking repository structure ==="
-      - pwd
-      - ls -la
-      - echo "=== Checking lambda directories ==="
-      - ls -la lambdas/
-      - ls -la lambdas/ec2_analyzer/
-      - echo "=== Checking lambda_function.py exists ==="
-      - test -f lambdas/ec2_analyzer/lambda_function.py && echo "✓ ec2_analyzer/lambda_function.py exists" || echo "✗ MISSING!"
-      - test -f lambdas/rds_analyzer/lambda_function.py && echo "✓ rds_analyzer/lambda_function.py exists" || echo "✗ MISSING!"
-      - test -f lambdas/ebs_analyzer/lambda_function.py && echo "✓ ebs_analyzer/lambda_function.py exists" || echo "✗ MISSING!"
-      - test -f lambdas/s3_analyzer/lambda_function.py && echo "✓ s3_analyzer/lambda_function.py exists" || echo "✗ MISSING!"
-      
       - echo "Run tests if they exist"
       - |
         if [ -d "tests" ]; then
